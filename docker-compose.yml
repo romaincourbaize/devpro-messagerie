@@ -1,0 +1,48 @@
+services:
+  server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: p2p-relay:latest
+
+    # ── Ports ──────────────────────────────────────────────────────────────
+    ports:
+      - "8080:8080"       # WebSocket endpoint  ws://localhost:8080/ws
+                          # Change to "443:8080" when behind a TLS proxy.
+
+    # ── Environment ────────────────────────────────────────────────────────
+    environment:
+      RELAY_ADDR: ":8080"
+      RELAY_KEY_FILE: "/data/server.key"   # generated on first start
+      RELAY_LOG_LEVEL: "info"              # debug | info | warn | error
+
+    # ── Persistence ────────────────────────────────────────────────────────
+    # The Noise static key is stored in a named volume so it survives
+    # container restarts without being embedded in the image.
+    volumes:
+      - relay-data:/data
+
+    # ── Healthcheck ────────────────────────────────────────────────────────
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/healthz || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+
+    # ── Restart policy ─────────────────────────────────────────────────────
+    restart: unless-stopped
+
+    # ── Resource limits (adjust to your host) ──────────────────────────────
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 256M
+        reservations:
+          cpus: "0.1"
+          memory: 32M
+
+# Named volume — survives `docker compose down`, removed only with `docker compose down -v`
+volumes:
+  relay-data:
