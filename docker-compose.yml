@@ -1,24 +1,21 @@
 services:
   server:
     build:
-      context: .
+      context: ./server
       dockerfile: Dockerfile
     image: p2p-relay:latest
 
     # ── Ports ──────────────────────────────────────────────────────────────
     ports:
       - "8080:8080"       # WebSocket endpoint  ws://localhost:8080/ws
-                          # Change to "443:8080" when behind a TLS proxy.
 
     # ── Environment ────────────────────────────────────────────────────────
     environment:
       RELAY_ADDR: ":8080"
-      RELAY_KEY_FILE: "/data/server.key"   # generated on first start
-      RELAY_LOG_LEVEL: "info"              # debug | info | warn | error
+      RELAY_KEY_FILE: "/data/server.key"
+      RELAY_LOG_LEVEL: "info"
 
     # ── Persistence ────────────────────────────────────────────────────────
-    # The Noise static key is stored in a named volume so it survives
-    # container restarts without being embedded in the image.
     volumes:
       - relay-data:/data
 
@@ -30,10 +27,8 @@ services:
       retries: 3
       start_period: 5s
 
-    # ── Restart policy ─────────────────────────────────────────────────────
     restart: unless-stopped
 
-    # ── Resource limits (adjust to your host) ──────────────────────────────
     deploy:
       resources:
         limits:
@@ -42,6 +37,41 @@ services:
         reservations:
           cpus: "0.1"
           memory: 32M
+
+  mailer:
+    build:
+      context: ./mailer
+      dockerfile: Dockerfile
+    image: p2p-mailer:latest
+
+    environment:
+      MAILER_ADDR:      ":8025"
+      MAILER_SMTP_HOST: ${MAILER_SMTP_HOST}
+      MAILER_SMTP_PORT: ${MAILER_SMTP_PORT:-587}
+      MAILER_SMTP_USER: ${MAILER_SMTP_USER}
+      MAILER_SMTP_PASS: ${MAILER_SMTP_PASS}
+      MAILER_FROM:      ${MAILER_FROM}
+
+    restart: unless-stopped
+
+  monitor:
+    build:
+      context: ./monitor
+      dockerfile: Dockerfile
+    image: p2p-monitor:latest
+
+    environment:
+      MONITOR_TARGET:     "http://server:8080/healthz"
+      MONITOR_INTERVAL:   "10"
+      MONITOR_TIMEOUT:    "5"
+      MONITOR_MAILER_URL: "http://mailer:8025"
+      MONITOR_EMAIL_TO:   ${MONITOR_EMAIL_TO}
+
+    restart: unless-stopped
+
+    depends_on:
+      - server
+      - mailer
 
 # Named volume — survives `docker compose down`, removed only with `docker compose down -v`
 volumes:
