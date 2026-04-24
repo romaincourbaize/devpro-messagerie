@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Messagerie</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<header>
+  <div id="dot" class="dot"></div>
+  <h1>Messagerie</h1>
+</header>
+
+<div class="fp-bar">
+  <span>Votre ID :</span>
+  <code id="myFp">génération…</code>
+  <button class="copy-btn" id="copyBtn">Copier</button>
+</div>
+
+<div class="target-bar">
+  <input id="targetInput" placeholder="ID du destinataire (64 hex)…" />
+  <button id="connectBtn">Connecter</button>
+</div>
+
+<div id="chat" class="chat"></div>
+
+<div class="input-bar">
+  <input id="msgInput" placeholder="Message…" disabled />
+  <button id="sendBtn" class="send-btn" disabled>&#10148;</button>
+</div>
+
+<script type="module" src="app.js"></script>
+</body>
+</html>
