@@ -1,0 +1,27 @@
+# Build artefacts
+bin/
+*.key
+
+# Docker files themselves (not needed in the build context)
+docker-compose.yml
+Dockerfile
+.dockerignore
+
+# VCS
+.git/
+.gitignore
+
+# Editor artefacts
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test cache / coverage
+*.out
+*.test
+coverage.html
