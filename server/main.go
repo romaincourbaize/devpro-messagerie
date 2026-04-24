@@ -13,8 +13,10 @@ package main
 import (
 	"context"
 	"crypto/ecdh"
+	"embed"
 	"encoding/hex"
 	"errors"
+	"io/fs"
 	"net/http"
 	"os"
 	"os/signal"
@@ -28,6 +30,9 @@ import (
 	"github.com/yourname/p2p-relay/internal/hub"
 	noiseutil "github.com/yourname/p2p-relay/internal/noise"
 )
+
+//go:embed web
+var webFS embed.FS
 
 func main() {
 	logger := buildLogger()
@@ -47,6 +52,10 @@ func main() {
 
 	// ── HTTP router ──────────────────────────────────────────────────────────
 	mux := http.NewServeMux()
+
+	// / — interface web
+	sub, _ := fs.Sub(webFS, "web")
+	mux.Handle("/", http.FileServer(http.FS(sub)))
 
 	// /ws — peer connections (Noise XX + message routing)
 	mux.HandleFunc("/ws", hand.ServeWS)
